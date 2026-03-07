@@ -1,0 +1,23 @@
+name: flutter_benchmark
+description: >
+  GPU stress-test benchmark suite for Flutter rendering backends.
+  Compares Impeller (Vulkan/Metal) vs Skia (OpenGL) with detailed
+  frame-time analysis, A/B testing, and JSON export.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  file_picker: ^10.3.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flutter Renderer Benchmark Suite</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0F0F23;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #00E5FF, #E040FB);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .subtitle { color: #888; font-size: 1rem; margin-bottom: 40px; }
+    .section-title { color: #E040FB; font-size: 1.2rem; margin-bottom: 16px; font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      width: 100%;
+      margin-bottom: 48px;
+    }
+    .card {
+      background: #1A1A2E;
+      border: 1px solid rgba(0, 229, 255, 0.15);
+      border-radius: 16px;
+      padding: 28px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover {
+      border-color: rgba(0, 229, 255, 0.5);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 229, 255, 0.08);
+    }
+    .card:hover::before { opacity: 1; }
+    .card h2 { color: #00E5FF; margin-bottom: 8px; font-size: 1.3rem; }
+    .card p { color: #999; font-size: 0.9rem; line-height: 1.6; }
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 14px;
+    }
+    .tag-webgl { background: rgba(0, 229, 255, 0.12); color: #00E5FF; --accent: #00E5FF; }
+    .tag-wasm { background: rgba(224, 64, 251, 0.12); color: #E040FB; --accent: #E040FB; }
+    .card:nth-child(1) { --accent: #00E5FF; }
+    .card:nth-child(2) { --accent: #E040FB; }
+    .info-box {
+      max-width: 900px;
+      width: 100%;
+      background: #1A1A2E;
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 24px;
+    }
+    .info-box h3 { color: #E040FB; margin-bottom: 14px; font-size: 1.1rem; }
+    .info-box p { color: #999; font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
+    pre {
+      background: #0a0a18;
+      padding: 18px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #00E5FF;
+      margin-top: 8px;
+    }
+    pre .comment { color: #555; }
+    pre .flag { color: #E040FB; }
+    .workflow {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .step {
+      flex: 1;
+      min-width: 160px;
+      background: rgba(0,229,255,0.04);
+      border: 1px solid rgba(0,229,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .step-num {
+      display: inline-block;
+      width: 28px; height: 28px;
+      line-height: 28px;
+      border-radius: 50%;
+      background: rgba(0,229,255,0.15);
+      color: #00E5FF;
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .step-title { color: #e0e0e0; font-size: 0.85rem; font-weight: 500; }
+    .step-desc { color: #666; font-size: 0.75rem; margin-top: 4px; }
+    .footer { color: #444; font-size: 0.8rem; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <h1>Flutter Renderer Benchmark Suite</h1>
+  <p class="subtitle">Compare rendering backends across platforms and renderers</p>
+
+  <p class="section-title">Web Renderers</p>
+  <div class="grid">
+    <a href="canvaskit/" class="card">
+      <h2>CanvasKit</h2>
+      <p>Default web renderer. Skia compiled to WebAssembly, rendering through a WebGL 2.0 canvas. Mature and widely compatible.</p>
+      <span class="tag tag-webgl">WebGL 2.0</span>
+    </a>
+    <a href="skwasm/" class="card">
+      <h2>Skwasm</h2>
+      <p>Wasm-native renderer. Skia compiled directly to WebAssembly via dart:ffi, using WebGPU for GPU access.</p>
+      <span class="tag tag-wasm">WebAssembly</span>
+    </a>
+  </div>
+
+  <div class="info-box">
+    <h3>Native Platform Benchmarks</h3>
+    <p>The same app runs natively on Android, iOS, Windows, Linux, and macOS.
+       Use <code style="color:#00E5FF">--dart-define=RENDERER=name</code> to label the renderer.</p>
+    <pre><span class="comment"># Android  (Skia default, Impeller opt-in)</span>
+flutter run -d android
+flutter run -d android <span class="flag">--enable-impeller --dart-define=RENDERER=Impeller</span>
+
+<span class="comment"># iOS  (Impeller default since Flutter 3.16)</span>
+flutter run -d ios
+flutter run -d ios <span class="flag">--no-enable-impeller --dart-define=RENDERER=Skia</span>
+
+<span class="comment"># Windows</span>
+flutter run -d windows
+flutter run -d windows <span class="flag">--enable-impeller --dart-define=RENDERER=Impeller</span>
+
+<span class="comment"># Linux</span>
+flutter run -d linux
+
+<span class="comment"># macOS  (Impeller default)</span>
+flutter run -d macos
+flutter run -d macos <span class="flag">--no-enable-impeller --dart-define=RENDERER=Skia</span></pre>
+  </div>
+
+  <div class="info-box">
+    <h3>Comparison Workflow</h3>
+    <p>Run benchmarks with each renderer, then compare results side-by-side.</p>
+    <div class="workflow">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Run Benchmarks</div>
+        <div class="step-desc">Click "Run All" with Renderer A</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Export Results</div>
+        <div class="step-desc">Click Export &rarr; Download JSON</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Switch Renderer</div>
+        <div class="step-desc">Open the other build or re-run with flags</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Import &amp; Compare</div>
+        <div class="step-desc">Import old JSON, run new tests, view % diff</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">Built with Flutter &bull; Benchmark Suite v2.0</p>
+</body>
+</html>
